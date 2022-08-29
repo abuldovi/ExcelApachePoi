@@ -1,38 +1,53 @@
-0 : date
-1 : symbol
-2 : reportedCurrency
-3 : cik
-4 : fillingDate
-5 : acceptedDate
-6 : calendarYear
-7 : period
-8 : revenue
-9 : costOfRevenue
-10 : grossProfit
-11 : grossProfitRatio
-12 : researchAndDevelopmentExpenses
-13 : generalAndAdministrativeExpenses
-14 : sellingAndMarketingExpenses
-15 : sellingGeneralAndAdministrativeExpenses
-16 : otherExpenses
-17 : operatingExpenses
-18 : costAndExpenses
-19 : interestIncome
-20 : interestExpense
-21 : depreciationAndAmortization
-22 : ebitda
-23 : ebitdaratio
-24 : operatingIncome
-25 : operatingIncomeRatio
-26 : totalOtherIncomeExpensesNet
-27 : incomeBeforeTax
-28 : incomeBeforeTaxRatio
-29 : incomeTaxExpense
-30 : netIncome
-31 : netIncomeRatio
-32 : eps
-33 : epsdiluted
-34 : weightedAverageShsOut
-35 : weightedAverageShsOutDil
-36 : link
-37 : finalLink
+
+
+
+Assets
+Current Assets
+Cash and cash equivalents
+Short-term investments 
+Accounts receivable, net
+Inventory 
+Other current assets
+Total current assets
+Non-current assets
+PP&E
+Long-term investments 
+Deferred tax asset
+Intangible assets
+Goodwill
+Other non-current assets
+Total non-current assets
+Other assets
+Total assets
+Liabilities and Equity
+Current liabilities
+Accounts payable
+Short-term debt
+Taxes payable
+Deferred revenue
+Other current liabilities
+Total current liabilities
+Non-current liabilities
+Long-term liablities
+Deferred tax liability
+Deferred revenue
+Other long-term liabilities
+Total non-current liabilities
+Other liabilities
+Capital lease obligations
+Equity
+Preferred equity
+Authorized shares 
+Outstanding shares 
+Issued shares
+Common stock
+Authorized shares 
+Issued shares 
+Outstanding shares 
+Common stock
+Other stockholders equity
+Retained earnings 
+Accumulated other comprehensive (loss) income (income/(loss))
+Noncontrolling interests (in subsidiaries)
+Total equity 
+Total liabilities and equity
