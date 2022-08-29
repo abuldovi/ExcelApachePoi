@@ -9,22 +9,38 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.*;
 import java.net.URL;
-import java.nio.file.Files;
-import java.util.*;
 
 public class ExcelCreation {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
 
-//        String companyName = "AAPL";
-//        String apiKey = "7759164af885a77ae927b986d5762b49";
-//        URL url = new URL("https://financialmodelingprep.com/api/v3/balance-sheet-statement/" + companyName + "?limit=120&apikey=" + apiKey);
+        String companyName = "GM";
+        String apiKey = "7759164af885a77ae927b986d5762b49";
+        URL url = new URL("https://financialmodelingprep.com/api/v3/balance-sheet-statement/" + companyName + "?limit=120&apikey=" + apiKey);
 //        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(url.openStream()));
 
-        File file = new File("test.json");
+//        File file = new File("test.json");
         ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode objYear = objectMapper.readTree(file);
+        JsonNode objYear = objectMapper.readTree(url);
 
-        System.out.println(objYear.get(0).get("date").asText());
+        try{
+            String cik = objYear.get(0).get("cik").asText();
+            System.out.println(objYear.get(0).get("cik").asText());
+        } catch (NullPointerException e){
+            System.out.println("Company Name or apiKey is incorrect");
+            throw e;
+        }
+        String cik = objYear.get(0).get("cik").asText();
+
+
+
+        JsonNode PreferredStockSharesAuthorizedSecObj = SecParcer.getSecJsonNode(cik, "PreferredStockSharesAuthorized");
+        JsonNode PreferredStockSharesOutstandingSecObj = SecParcer.getSecJsonNode(cik, "PreferredStockSharesOutstanding");
+        JsonNode PreferredStockSharesIssuedSecObj = SecParcer.getSecJsonNode(cik, "PreferredStockSharesIssued");
+        JsonNode CommonStockSharesAuthorizedSecObj = SecParcer.getSecJsonNode(cik, "CommonStockSharesAuthorized");
+        JsonNode CommonStockSharesIssuedSecObj = SecParcer.getSecJsonNode(cik, "CommonStockSharesIssued");
+        JsonNode CommonStockSharesOutstandingSecObj = SecParcer.getSecJsonNode(cik, "CommonStockSharesOutstanding");
+
+
 
 
         XSSFWorkbook workbook = new XSSFWorkbook();
@@ -32,16 +48,13 @@ public class ExcelCreation {
         XSSFSheet sheet = workbook.createSheet();
 
         DataFormat format = workbook.createDataFormat();
-//
-//        XSSFFont font = workbook.createFont();
-//        font.setFontHeightInPoints((short)10);
-//        font.setFontName("Arial");
-//        font.setColor(IndexedColors.WHITE.getIndex());
-//        font.setBold(true);
-//        font.setItalic(false);
+
+     // Styles -------------------------------------------------------------------------------------------------
 
         XSSFCellStyle numbStyle = workbook.createCellStyle();
-        numbStyle.setDataFormat(format.getFormat("# ##0"));
+        String numbFormat = "# ##0.00";
+        numbStyle.setDataFormat(format.getFormat(numbFormat));
+    //    numbStyle.setDataFormat(format.getFormat("# ##0"));
 
 
         XSSFCellStyle headerStyle = workbook.createCellStyle();
@@ -63,13 +76,15 @@ public class ExcelCreation {
         aggregateNumStyleBig.setFont(aggregateNumStyleFontBig);
 
         XSSFCellStyle numbStyleBold = workbook.createCellStyle();
-        numbStyleBold.setDataFormat(format.getFormat("# ##0"));
+        numbStyleBold.setDataFormat(format.getFormat(numbFormat));
         numbStyleBold.setFont(aggregateNumStyleFont);
 
-            int referenceHeight = 1;
+        // Left column -------------------------------------------------------------------------------------------------
 
-            sheet.addMergedRegion(new CellRangeAddress(referenceHeight, referenceHeight, 0, objYear.size()+1));
-//
+            int referenceHeight = 1; // Padding from top
+
+            sheet.addMergedRegion(new CellRangeAddress(referenceHeight, referenceHeight, 0, objYear.size()));
+
             Row header = sheet.createRow(referenceHeight);
             Cell cell= header.createCell(0);
             cell.setCellValue("Balance sheet");
@@ -82,7 +97,6 @@ public class ExcelCreation {
 
 
             Row assets = sheet.createRow(referenceHeight);
-            int assetsInt = referenceHeight;
             Cell assetsCell = assets.createCell(0);
                 assetsCell.setCellValue("Assets");
                 assetsCell.setCellStyle(aggregateNumStyleBig);
@@ -96,22 +110,18 @@ public class ExcelCreation {
 
             Row cash = sheet.createRow(referenceHeight);
             cash.createCell(0).setCellValue("Cash and cash equivalents");
-            int cashInt = referenceHeight;
             referenceHeight++;
 
             Row shortTermInv = sheet.createRow(referenceHeight);
             shortTermInv.createCell(0).setCellValue("Short-term investments");
-            int shortTermInvInt = referenceHeight;
             referenceHeight++;
 
             Row accountsReceivable = sheet.createRow(referenceHeight);
             accountsReceivable.createCell(0).setCellValue("Accounts receivable, net");
-            int accountsReceivableInt = referenceHeight;
             referenceHeight++;
 
             Row inventory = sheet.createRow(referenceHeight);
             inventory.createCell(0).setCellValue("Inventory");
-            int inventoryInt = referenceHeight;
             referenceHeight++;
 
             Row otherCurrentAssets = sheet.createRow(referenceHeight);
@@ -255,29 +265,93 @@ public class ExcelCreation {
 
             Row preferredEquity = sheet.createRow(referenceHeight);
             Cell preferredEquityCell = preferredEquity.createCell(0);
-            preferredEquityCell.setCellValue("Total non-current liabilities");
+            preferredEquityCell.setCellValue("Preferred equity");
             preferredEquityCell.setCellStyle(aggregateNumStyle);
             referenceHeight++;
 
+            Row preferredStockSharesAuthorized = sheet.createRow(referenceHeight);
+            preferredStockSharesAuthorized.createCell(0).setCellValue("Authorized shares");
+            referenceHeight++;
 
-            sheet.autoSizeColumn(0);
+            Row preferredStockSharesOutstanding = sheet.createRow(referenceHeight);
+            preferredStockSharesOutstanding.createCell(0).setCellValue("Outstanding shares");
+            referenceHeight++;
+
+            Row preferredStockSharesIssued = sheet.createRow(referenceHeight);
+            preferredStockSharesIssued.createCell(0).setCellValue("Issued shares");
+            referenceHeight++;
+
+            Row commonStockHeader = sheet.createRow(referenceHeight);
+            Cell commonStockHeaderCell = commonStockHeader.createCell(0);
+            commonStockHeaderCell.setCellValue("Common Stock");
+            commonStockHeaderCell.setCellStyle(aggregateNumStyle);
+            referenceHeight++;
+
+            Row commonStockSharesAuthorized = sheet.createRow(referenceHeight);
+            commonStockSharesAuthorized.createCell(0).setCellValue("Authorized shares");
+            referenceHeight++;
+
+            Row commonStockSharesIssued = sheet.createRow(referenceHeight);
+            commonStockSharesIssued.createCell(0).setCellValue("Issued shares");
+            referenceHeight++;
+
+            Row commonStockSharesOutstanding = sheet.createRow(referenceHeight);
+            commonStockSharesOutstanding.createCell(0).setCellValue("Outstanding shares");
+            referenceHeight++;
+
+            Row commonStock = sheet.createRow(referenceHeight);
+            commonStock.createCell(0).setCellValue("Common stock");
+            referenceHeight++;
+
+            Row othertotalStockholdersEquity = sheet.createRow(referenceHeight);
+            othertotalStockholdersEquity.createCell(0).setCellValue("Other stockholders equity");
+            referenceHeight++;
+
+            Row retainedEarnings = sheet.createRow(referenceHeight);
+            retainedEarnings.createCell(0).setCellValue("Retained earnings ");
+            referenceHeight++;
+
+            Row accumulatedOtherComprehensiveIncomeLoss = sheet.createRow(referenceHeight);
+            accumulatedOtherComprehensiveIncomeLoss.createCell(0).setCellValue("Accumulated other comprehensive (loss) income (income/(loss))");
+            referenceHeight++;
+
+            Row minorityInterest = sheet.createRow(referenceHeight);
+            minorityInterest.createCell(0).setCellValue("Noncontrolling interests (in subsidiaries)");
+            referenceHeight++;
+
+            Row totalStockholdersEquity = sheet.createRow(referenceHeight);
+            Cell totalStockholdersEquityCell = totalStockholdersEquity.createCell(0);
+            totalStockholdersEquityCell.setCellValue("Total equity");
+            totalStockholdersEquityCell.setCellStyle(aggregateNumStyle);
+            referenceHeight++;
+
+            Row totalLiabilitiesAndTotalEquity = sheet.createRow(referenceHeight);
+            Cell totalLiabilitiesAndTotalEquityCell = totalLiabilitiesAndTotalEquity.createCell(0);
+            totalLiabilitiesAndTotalEquityCell.setCellValue("Total liabilities and equity");
+            totalLiabilitiesAndTotalEquityCell.setCellStyle(aggregateNumStyleBig);
+            referenceHeight++;
+
+
+
+
+
 
 
 ///////////////////////////////////
 ///////////////////////////////////
 ///////////////////////////////////
 ///////////////////////////////////
-
+        int paddingLeft = 1;
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             int d = objYear.get(4-i).get("calendarYear").asInt();
-            years.createCell(i + 2).setCellValue(d);
+            years.createCell(i + paddingLeft).setCellValue(d);
 
         }
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             long d = objYear.get(4-i).get("cashAndCashEquivalents").asLong();
-            Cell tempCell = cash.createCell(i + 2);
+            Cell tempCell = cash.createCell(i + paddingLeft);
             tempCell.setCellValue(divider(d));
             tempCell.setCellStyle(numbStyle);
 
@@ -285,7 +359,7 @@ public class ExcelCreation {
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             long d = objYear.get(4-i).get("shortTermInvestments").asLong();
-            Cell tempCell = shortTermInv.createCell(i + 2);
+            Cell tempCell = shortTermInv.createCell(i + paddingLeft);
             tempCell.setCellValue(divider(d));
             tempCell.setCellStyle(numbStyle);
 
@@ -293,7 +367,7 @@ public class ExcelCreation {
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             long d = objYear.get(4-i).get("netReceivables").asLong();
-            Cell tempCell = accountsReceivable.createCell(i + 2);
+            Cell tempCell = accountsReceivable.createCell(i + paddingLeft);
             tempCell.setCellValue(divider(d));
             tempCell.setCellStyle(numbStyle);
 
@@ -301,7 +375,7 @@ public class ExcelCreation {
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             long d = objYear.get(4-i).get("inventory").asLong();
-            Cell tempCell = inventory.createCell(i + 2);
+            Cell tempCell = inventory.createCell(i + paddingLeft);
             tempCell.setCellValue(divider(d));
             tempCell.setCellStyle(numbStyle);
 
@@ -309,7 +383,7 @@ public class ExcelCreation {
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             long d = objYear.get(4-i).get("otherCurrentAssets").asLong();
-            Cell tempCell = otherCurrentAssets.createCell(i + 2);
+            Cell tempCell = otherCurrentAssets.createCell(i + paddingLeft);
             tempCell.setCellValue(divider(d));
             tempCell.setCellStyle(numbStyle);
 
@@ -317,7 +391,7 @@ public class ExcelCreation {
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             long d = objYear.get(4-i).get("totalCurrentAssets").asLong();
-            Cell tempCell = totalCurrentAssets.createCell(i + 2);
+            Cell tempCell = totalCurrentAssets.createCell(i + paddingLeft);
             tempCell.setCellValue(divider(d));
             tempCell.setCellStyle(numbStyleBold);
 
@@ -325,7 +399,7 @@ public class ExcelCreation {
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             long d = objYear.get(4-i).get("propertyPlantEquipmentNet").asLong();
-            Cell tempCell = propertyPlantEquipmentNet.createCell(i + 2);
+            Cell tempCell = propertyPlantEquipmentNet.createCell(i + paddingLeft);
             tempCell.setCellValue(divider(d));
             tempCell.setCellStyle(numbStyle);
 
@@ -333,7 +407,7 @@ public class ExcelCreation {
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             long d = objYear.get(4-i).get("longTermInvestments").asLong();
-            Cell tempCell = longTermInvestments.createCell(i + 2);
+            Cell tempCell = longTermInvestments.createCell(i + paddingLeft);
             tempCell.setCellValue(divider(d));
             tempCell.setCellStyle(numbStyle);
 
@@ -341,7 +415,7 @@ public class ExcelCreation {
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             long d = objYear.get(4-i).get("taxAssets").asLong();
-            Cell tempCell = taxAssets.createCell(i + 2);
+            Cell tempCell = taxAssets.createCell(i + paddingLeft);
             tempCell.setCellValue(divider(d));
             tempCell.setCellStyle(numbStyle);
 
@@ -349,7 +423,7 @@ public class ExcelCreation {
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             long d = objYear.get(4-i).get("intangibleAssets").asLong();
-            Cell tempCell = intangibleAssets.createCell(i + 2);
+            Cell tempCell = intangibleAssets.createCell(i + paddingLeft);
             tempCell.setCellValue(divider(d));
             tempCell.setCellStyle(numbStyle);
 
@@ -357,7 +431,7 @@ public class ExcelCreation {
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             long d = objYear.get(4-i).get("goodwill").asLong();
-            Cell tempCell = goodwill.createCell(i + 2);
+            Cell tempCell = goodwill.createCell(i + paddingLeft);
             tempCell.setCellValue(divider(d));
             tempCell.setCellStyle(numbStyle);
 
@@ -365,7 +439,7 @@ public class ExcelCreation {
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             long d = objYear.get(4-i).get("otherNonCurrentAssets").asLong();
-            Cell tempCell = otherNonCurrentAssets.createCell(i + 2);
+            Cell tempCell = otherNonCurrentAssets.createCell(i + paddingLeft);
             tempCell.setCellValue(divider(d));
             tempCell.setCellStyle(numbStyle);
 
@@ -373,7 +447,7 @@ public class ExcelCreation {
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             long d = objYear.get(4-i).get("totalNonCurrentAssets").asLong();
-            Cell tempCell = totalNonCurrentAssets.createCell(i + 2);
+            Cell tempCell = totalNonCurrentAssets.createCell(i + paddingLeft);
             tempCell.setCellValue(divider(d));
             tempCell.setCellStyle(numbStyleBold);
 
@@ -381,7 +455,7 @@ public class ExcelCreation {
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             long d = objYear.get(4-i).get("otherAssets").asLong();
-            Cell tempCell = otherAssets.createCell(i + 2);
+            Cell tempCell = otherAssets.createCell(i + paddingLeft);
             tempCell.setCellValue(divider(d));
             tempCell.setCellStyle(numbStyleBold);
 
@@ -389,7 +463,7 @@ public class ExcelCreation {
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             long d = objYear.get(4-i).get("totalAssets").asLong();
-            Cell tempCell = totalAssets.createCell(i + 2);
+            Cell tempCell = totalAssets.createCell(i + paddingLeft);
             tempCell.setCellValue(divider(d));
             tempCell.setCellStyle(numbStyleBold);
 
@@ -397,7 +471,7 @@ public class ExcelCreation {
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             long d = objYear.get(4-i).get("accountPayables").asLong();
-            Cell tempCell = accountPayables.createCell(i + 2);
+            Cell tempCell = accountPayables.createCell(i + paddingLeft);
             tempCell.setCellValue(divider(d));
             tempCell.setCellStyle(numbStyle);
 
@@ -405,7 +479,7 @@ public class ExcelCreation {
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             long d = objYear.get(4-i).get("shortTermDebt").asLong();
-            Cell tempCell = shortTermDebt.createCell(i + 2);
+            Cell tempCell = shortTermDebt.createCell(i + paddingLeft);
             tempCell.setCellValue(divider(d));
             tempCell.setCellStyle(numbStyle);
 
@@ -413,7 +487,7 @@ public class ExcelCreation {
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             long d = objYear.get(4-i).get("taxPayables").asLong();
-            Cell tempCell = taxPayables.createCell(i + 2);
+            Cell tempCell = taxPayables.createCell(i + paddingLeft);
             tempCell.setCellValue(divider(d));
             tempCell.setCellStyle(numbStyle);
 
@@ -421,7 +495,7 @@ public class ExcelCreation {
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             long d = objYear.get(4-i).get("deferredRevenue").asLong();
-            Cell tempCell = deferredRevenue.createCell(i + 2);
+            Cell tempCell = deferredRevenue.createCell(i + paddingLeft);
             tempCell.setCellValue(divider(d));
             tempCell.setCellStyle(numbStyle);
 
@@ -429,7 +503,7 @@ public class ExcelCreation {
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             long d = objYear.get(4-i).get("otherCurrentLiabilities").asLong();
-            Cell tempCell = otherCurrentLiabilities.createCell(i + 2);
+            Cell tempCell = otherCurrentLiabilities.createCell(i + paddingLeft);
             tempCell.setCellValue(divider(d));
             tempCell.setCellStyle(numbStyle);
 
@@ -437,7 +511,7 @@ public class ExcelCreation {
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             long d = objYear.get(4-i).get("totalCurrentLiabilities").asLong();
-            Cell tempCell = totalCurrentLiabilities.createCell(i + 2);
+            Cell tempCell = totalCurrentLiabilities.createCell(i + paddingLeft);
             tempCell.setCellValue(divider(d));
             tempCell.setCellStyle(numbStyleBold);
 
@@ -445,7 +519,7 @@ public class ExcelCreation {
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             long d = objYear.get(4-i).get("longTermDebt").asLong();
-            Cell tempCell = longTermDebt.createCell(i + 2);
+            Cell tempCell = longTermDebt.createCell(i + paddingLeft);
             tempCell.setCellValue(divider(d));
             tempCell.setCellStyle(numbStyle);
 
@@ -453,7 +527,7 @@ public class ExcelCreation {
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             long d = objYear.get(4-i).get("deferredTaxLiabilitiesNonCurrent").asLong();
-            Cell tempCell = deferredTaxLiabilitiesNonCurrent.createCell(i + 2);
+            Cell tempCell = deferredTaxLiabilitiesNonCurrent.createCell(i + paddingLeft);
             tempCell.setCellValue(divider(d));
             tempCell.setCellStyle(numbStyle);
 
@@ -461,7 +535,7 @@ public class ExcelCreation {
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             long d = objYear.get(4-i).get("deferredRevenueNonCurrent").asLong();
-            Cell tempCell = deferredRevenueNonCurrent.createCell(i + 2);
+            Cell tempCell = deferredRevenueNonCurrent.createCell(i + paddingLeft);
             tempCell.setCellValue(divider(d));
             tempCell.setCellStyle(numbStyle);
 
@@ -469,7 +543,7 @@ public class ExcelCreation {
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             long d = objYear.get(4-i).get("otherNonCurrentLiabilities").asLong();
-            Cell tempCell = otherNonCurrentLiabilities.createCell(i + 2);
+            Cell tempCell = otherNonCurrentLiabilities.createCell(i + paddingLeft);
             tempCell.setCellValue(divider(d));
             tempCell.setCellStyle(numbStyle);
 
@@ -477,7 +551,7 @@ public class ExcelCreation {
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             long d = objYear.get(4-i).get("totalNonCurrentLiabilities").asLong();
-            Cell tempCell = totalNonCurrentLiabilities.createCell(i + 2);
+            Cell tempCell = totalNonCurrentLiabilities.createCell(i + paddingLeft);
             tempCell.setCellValue(divider(d));
             tempCell.setCellStyle(numbStyleBold);
 
@@ -485,7 +559,7 @@ public class ExcelCreation {
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             long d = objYear.get(4-i).get("otherLiabilities").asLong();
-            Cell tempCell = otherLiabilities.createCell(i + 2);
+            Cell tempCell = otherLiabilities.createCell(i + paddingLeft);
             tempCell.setCellValue(divider(d));
             tempCell.setCellStyle(numbStyle);
 
@@ -493,43 +567,157 @@ public class ExcelCreation {
 
         for (int i = objYear.size()-1; i >= 0 ; i--) {
             long d = objYear.get(4-i).get("capitalLeaseObligations").asLong();
-            Cell tempCell = capitalLeaseObligations.createCell(i + 2);
+            Cell tempCell = capitalLeaseObligations.createCell(i + paddingLeft);
             tempCell.setCellValue(divider(d));
             tempCell.setCellStyle(numbStyle);
+
+        }
+
+        for (int i = objYear.size()-1; i >= 0 ; i--) {
+            int d = objYear.get(4-i).get("calendarYear").asInt();
+            long k = SecParcer.secValue(d, PreferredStockSharesAuthorizedSecObj);
+            Cell tempCell = preferredStockSharesAuthorized.createCell(i + paddingLeft);
+                    if(k<0){tempCell.setCellValue("None");}
+                    else
+                    {
+                        tempCell.setCellValue(divider(k));
+                        tempCell.setCellStyle(numbStyle);
+                    }
+
+
+        }
+
+        for (int i = objYear.size()-1; i >= 0 ; i--) {
+            int d = objYear.get(4-i).get("calendarYear").asInt();
+            long k = SecParcer.secValue(d, PreferredStockSharesOutstandingSecObj);
+            Cell tempCell = preferredStockSharesOutstanding.createCell(i + paddingLeft);
+                    if(k<0){tempCell.setCellValue("None");}
+                    else
+                    {
+                        tempCell.setCellValue(divider(k));
+                        tempCell.setCellStyle(numbStyle);
+                    }
+
+        }
+
+        for (int i = objYear.size()-1; i >= 0 ; i--) {
+            int d = objYear.get(4-i).get("calendarYear").asInt();
+            long k = SecParcer.secValue(d, PreferredStockSharesIssuedSecObj);
+            Cell tempCell = preferredStockSharesIssued.createCell(i + paddingLeft);
+                    if(k<0){tempCell.setCellValue("None");}
+                    else
+                    {
+                        tempCell.setCellValue(divider(k));
+                        tempCell.setCellStyle(numbStyle);
+                    }
+
+        }
+
+        for (int i = objYear.size()-1; i >= 0 ; i--) {
+            int d = objYear.get(4-i).get("calendarYear").asInt();
+            long k = SecParcer.secValue(d, CommonStockSharesAuthorizedSecObj);
+            Cell tempCell = commonStockSharesAuthorized.createCell(i + paddingLeft);
+                    if(k<0){tempCell.setCellValue("None");}
+                    else
+                    {
+                        tempCell.setCellValue(divider(k));
+                        tempCell.setCellStyle(numbStyle);
+                    }
+
+        }
+
+        for (int i = objYear.size()-1; i >= 0 ; i--) {
+            int d = objYear.get(4-i).get("calendarYear").asInt();
+            long k = SecParcer.secValue(d, CommonStockSharesIssuedSecObj);
+            Cell tempCell = commonStockSharesIssued.createCell(i + paddingLeft);
+                    if(k<0){tempCell.setCellValue("None");}
+                    else
+                    {
+                        tempCell.setCellValue(divider(k));
+                        tempCell.setCellStyle(numbStyle);
+                    }
+
+        }
+
+        for (int i = objYear.size()-1; i >= 0 ; i--) {
+            int d = objYear.get(4-i).get("calendarYear").asInt();
+            long k = SecParcer.secValue(d, CommonStockSharesOutstandingSecObj);
+            Cell tempCell = commonStockSharesOutstanding.createCell(i + paddingLeft);
+                    if(k<0){tempCell.setCellValue("None");}
+                    else
+                    {
+                        tempCell.setCellValue(divider(k));
+                        tempCell.setCellStyle(numbStyle);
+                    }
+
+        }
+
+
+        for (int i = objYear.size()-1; i >= 0 ; i--) {
+            long d = objYear.get(4-i).get("commonStock").asLong();
+            Cell tempCell = commonStock.createCell(i + paddingLeft);
+            tempCell.setCellValue(divider(d));
+            tempCell.setCellStyle(numbStyle);
+
+        }
+        for (int i = objYear.size()-1; i >= 0 ; i--) {
+            long d = objYear.get(4-i).get("othertotalStockholdersEquity").asLong();
+            Cell tempCell = othertotalStockholdersEquity.createCell(i + paddingLeft);
+            tempCell.setCellValue(divider(d));
+            tempCell.setCellStyle(numbStyle);
+
+        }
+        for (int i = objYear.size()-1; i >= 0 ; i--) {
+            long d = objYear.get(4-i).get("retainedEarnings").asLong();
+            Cell tempCell = retainedEarnings.createCell(i + paddingLeft);
+            tempCell.setCellValue(divider(d));
+            tempCell.setCellStyle(numbStyle);
+
+        }
+        for (int i = objYear.size()-1; i >= 0 ; i--) {
+            long d = objYear.get(4-i).get("accumulatedOtherComprehensiveIncomeLoss").asLong();
+            Cell tempCell = accumulatedOtherComprehensiveIncomeLoss.createCell(i + paddingLeft);
+            tempCell.setCellValue(divider(d));
+            tempCell.setCellStyle(numbStyle);
+
+        }
+        for (int i = objYear.size()-1; i >= 0 ; i--) {
+            long d = objYear.get(4-i).get("minorityInterest").asLong();
+            Cell tempCell = minorityInterest.createCell(i + paddingLeft);
+            tempCell.setCellValue(divider(d));
+            tempCell.setCellStyle(numbStyle);
+
+        }
+        for (int i = objYear.size()-1; i >= 0 ; i--) {
+            long d = objYear.get(4-i).get("totalStockholdersEquity").asLong();
+            Cell tempCell = totalStockholdersEquity.createCell(i + paddingLeft);
+            tempCell.setCellValue(divider(d));
+            tempCell.setCellStyle(numbStyleBold);
+
+        }
+        for (int i = objYear.size()-1; i >= 0 ; i--) {
+            long d = objYear.get(4-i).get("totalLiabilitiesAndTotalEquity").asLong();
+            Cell tempCell = totalLiabilitiesAndTotalEquity.createCell(i + paddingLeft);
+            tempCell.setCellValue(divider(d));
+            tempCell.setCellStyle(numbStyleBold);
 
         }
 
 
 
 
-
-
-//        for (int i = 0; i < listFinal.size(); i++) {
-//            Row temp = sheet.createRow(i+5);
-//            var k = listFinalArr[i];
-//            temp.createCell(0).setCellValue(k.toString()); }
-//
-//
-//            for (int j = 0; j < listParser.size(); j++) {
-//                for (int i = 0; i < listFinal.size(); i++) {
-//                    LinkedHashMap listFinal2 = parcer.parce(listParser, j);
-//                    Row temp = sheet.getRow(i+1);
-//                    var k = listFinal2.get(listFinalArr[i]);
-//                    if (k instanceof Long){
-//                        k = (long)k/1000000;
-//                        temp.createCell(j+1).setCellValue((long) k);
-//                    } else if (k instanceof Double) temp.createCell(j+1).setCellValue(k.toString());
-//                }
-//   }
+        for (int i = 0; i < objYear.size()+2; i++) {
+            sheet.autoSizeColumn(i);
+        }
 
 
             FileOutputStream out = new FileOutputStream(
-                    new File("Test.xlsx"));
+                    new File(companyName + "_Report.xlsx"));
             workbook.write(out);
             out.close();
     }
-    public static int divider(long longNumber){
-        return (int)(longNumber/1_000_000);
+    public static double divider(long longNumber){
+        return (double)(longNumber/1_000_000);
     }
 
     }
