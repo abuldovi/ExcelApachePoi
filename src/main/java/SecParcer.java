@@ -9,11 +9,6 @@ import java.net.URLConnection;
 
 public class SecParcer {
 
-    public static void main(String[] args) throws Exception {
-
-
-    }
-
     private static String readUrl(String urlString) throws Exception {
         BufferedReader reader = null;
         try {

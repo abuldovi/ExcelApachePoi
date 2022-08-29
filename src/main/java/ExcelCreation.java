@@ -7,13 +7,14 @@ import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import javax.swing.*;
 import java.io.*;
 import java.net.URL;
 
 public class ExcelCreation {
     public static void main(String[] args) throws Exception {
-
-        String companyName = "GM";
+        String companyName = JOptionPane.showInputDialog ("Type company ticker");
+//        String companyName = "GM";
         String apiKey = "7759164af885a77ae927b986d5762b49";
         URL url = new URL("https://financialmodelingprep.com/api/v3/balance-sheet-statement/" + companyName + "?limit=120&apikey=" + apiKey);
 //        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(url.openStream()));
@@ -26,8 +27,8 @@ public class ExcelCreation {
             String cik = objYear.get(0).get("cik").asText();
             System.out.println(objYear.get(0).get("cik").asText());
         } catch (NullPointerException e){
-            System.out.println("Company Name or apiKey is incorrect");
-            throw e;
+            JOptionPane.showMessageDialog(new JFrame("Error"), "Company Name or apiKey is incorrect, please restart the program");
+            System.exit(0);
         }
         String cik = objYear.get(0).get("cik").asText();
 
