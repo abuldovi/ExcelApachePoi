@@ -17,15 +17,11 @@ public class ExcelCreation {
     public static void main(String[] args) throws Exception {
 
         Date current = new Date();
+        String companyName = JOptionPane.showInputDialog ("Type company ticker");
+        int showNull = Integer.parseInt(JOptionPane.showInputDialog ("Type 0 to show lines with no information, type 1 otherwise"));
 
-
-//        String companyName = JOptionPane.showInputDialog ("Type company ticker");
-        //        int showNull = JOptionPane.showInputDialog ("Type company ticker"); add functionality show nulls or not
-
-        int showNull = 0;
-
-
-        String companyName = "TSLA";
+//        int showNull = 0;
+//        String companyName = "TSLA";
         String apiKey = "7759164af885a77ae927b986d5762b49";
         URL url = new URL("https://financialmodelingprep.com/api/v3/balance-sheet-statement/" + companyName + "?limit=120&apikey=" + apiKey);
         URL incomeURL = new URL("https://financialmodelingprep.com/api/v3/income-statement/" + companyName + "?limit=120&apikey=" + apiKey);
@@ -787,7 +783,7 @@ public class ExcelCreation {
             }
 
             if (showNull == 1) {
-                if (k == 0) {
+                if (k < 0) {
                     zeroCounter++;
                 }
                 if (zeroCounter == 5) {
@@ -815,7 +811,7 @@ public class ExcelCreation {
             }
 
             if (showNull == 1) {
-                if (k == 0) {
+                if (k < 0) {
                     zeroCounter++;
                 }
                 if (zeroCounter == 5) {
@@ -842,7 +838,7 @@ public class ExcelCreation {
             }
 
             if (showNull == 1) {
-                if (k == 0) {
+                if (k < 0) {
                     zeroCounter++;
                 }
                 if (zeroCounter == 5) {
@@ -877,7 +873,7 @@ public class ExcelCreation {
             }
 
             if (showNull == 1) {
-                if (k == 0) {
+                if (k < 0) {
                     zeroCounter++;
                 }
                 if (zeroCounter == 5) {
@@ -904,7 +900,7 @@ public class ExcelCreation {
             }
 
             if (showNull == 1) {
-                if (k == 0) {
+                if (k < 0) {
                     zeroCounter++;
                 }
                 if (zeroCounter == 5) {
@@ -931,7 +927,7 @@ public class ExcelCreation {
             }
 
             if (showNull == 1) {
-                if (k == 0) {
+                if (k < 0) {
                     zeroCounter++;
                 }
                 if (zeroCounter == 5) {
@@ -1669,7 +1665,7 @@ public class ExcelCreation {
                 tempCell.setCellStyle(numbStyle);
             }
 
-            if(k==0){
+            if(k<0){
                 zeroCounter++;
             }
 
@@ -1696,7 +1692,7 @@ public class ExcelCreation {
                 tempCell.setCellStyle(numbStyle);
             }
 
-            if(k==0){
+            if(k<0){
                 zeroCounter++;
             }
 
@@ -1723,7 +1719,7 @@ public class ExcelCreation {
                 tempCell.setCellStyle(numbStyle);
             }
 
-            if(k==0){
+            if(k<0){
                 zeroCounter++;
             }
 
@@ -1846,12 +1842,16 @@ public class ExcelCreation {
                 tempCell.setCellStyle(numbStyle);
             }
 
-            if(k==0){
+            if(k<0){
                 zeroCounter++;
             }
 
         }
         if (zeroCounter==5){
+            for (int i = objYear.size(); i >= 0 ; i--) {
+                Cell tempCell = dividendsCommonStock.createCell(i + paddingLeft+paddingIncome-1);
+                tempCell.setCellValue("");}
+
             referenceHeight--;
         }
         zeroCounter = 0;
@@ -2633,10 +2633,15 @@ public class ExcelCreation {
         Date current2 = new Date();
         System.out.println(current2.getTime()-current.getTime());
 
+
     }
+
+
     public static double divider(long longNumber){
         return (double)(longNumber/1_000_000);
     }
 
-    }
+
+}
+
 
