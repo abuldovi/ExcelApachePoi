@@ -23,7 +23,7 @@ public class SecParcer {
 
             return buffer.toString();
         } catch (FileNotFoundException e){
-            return "None";
+            return "N/A";
         }
         finally {
             if (reader != null) reader.close();
@@ -32,25 +32,79 @@ public class SecParcer {
 
     public static JsonNode getSecJsonNode(String cik, String parameter) throws Exception {
         String request = readUrl(getRequestSec(cik, parameter));
-        if (!request.equals("None")){
+        if (!request.equals("N/A")){
         ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.readTree(request);
     } else return null;
     }
 
-    public static long secValue(int year, JsonNode objYear) throws Exception {;
+    public static long secValue(int year, JsonNode objYear) throws Exception {
 
         long result = -1;
-        if (objYear!=null){
-        for (int i = 0; i < objYear.get("units").get("shares").size(); i++) {
-            if(objYear.get("units").get("shares").get(i).get("fy").asInt()==year &&
-                    objYear.get("units").get("shares").get(i).get("form").asText().equals("10-K"))
-            {
-                result = objYear.get("units").get("shares").get(i).get("val").asLong();
+        try {
+            if (objYear != null) {
+                for (int i = 0; i < objYear.get("units").get("shares").size(); i++) {
+                    if (objYear.get("units").get("shares").get(i).get("fy").asInt() == year &&
+                            objYear.get("units").get("shares").get(i).get("form").asText().equals("10-K")) {
+                        result = objYear.get("units").get("shares").get(i).get("val").asLong();
+                    }
+                }
             }
+            return result;
+        } catch (NullPointerException e) {
+            return result;
         }
+    }
+
+    public static long secValueIncome(int year, JsonNode objYear) throws Exception {
+        long result = -1;
+        try {
+            if (objYear != null) {
+                for (int i = 0; i < objYear.get("units").get("USD").size(); i++) {
+                    if (objYear.get("units").get("USD").get(i).get("fy").asInt() == year &&
+                            objYear.get("units").get("USD").get(i).get("form").asText().equals("10-K")) {
+                        result = objYear.get("units").get("USD").get(i).get("val").asLong();
+                    }
+                }
+            }
+            return result;
+        } catch (NullPointerException e) {
+            return result;
         }
-        return result;
+    }
+
+    public static double secValueDouble(int year, JsonNode objYear) throws Exception {
+        double result = -1;
+        try {
+            if (objYear != null) {
+                for (int i = 0; i < objYear.get("units").get("shares").size(); i++) {
+                    if (objYear.get("units").get("shares").get(i).get("fy").asInt() == year &&
+                            objYear.get("units").get("shares").get(i).get("form").asText().equals("10-K")) {
+                        result = objYear.get("units").get("shares").get(i).get("val").asDouble();
+                    }
+                }
+            }
+            return result;
+        } catch (NullPointerException e) {
+            return result;
+        }
+    }
+    public static double secValueIncomeDouble(int year, JsonNode objYear) throws Exception {
+        double result = -1;
+
+        try {
+            if (objYear != null) {
+                for (int i = 0; i < objYear.get("units").get("USD").size(); i++) {
+                    if (objYear.get("units").get("USD").get(i).get("fy").asInt() == year &&
+                            objYear.get("units").get("USD").get(i).get("form").asText().equals("10-K")) {
+                        result = objYear.get("units").get("USD").get(i).get("val").asDouble();
+                    }
+                }
+            }
+            return result;
+        } catch (NullPointerException e) {
+            return result;
+        }
     }
     public static String getRequestSec(String cik, String parameter){
         return "https://data.sec.gov/api/xbrl/companyconcept/CIK"+ cik + "/us-gaap/"+ parameter +".json";
