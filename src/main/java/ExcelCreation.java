@@ -20,15 +20,11 @@ public class ExcelCreation {
         String companyName = JOptionPane.showInputDialog ("Type company ticker");
         int showNull = Integer.parseInt(JOptionPane.showInputDialog ("Type 0 to show lines with no information, type 1 otherwise"));
 
-//        int showNull = 0;
-//        String companyName = "TSLA";
+
         String apiKey = "7759164af885a77ae927b986d5762b49";
         URL url = new URL("https://financialmodelingprep.com/api/v3/balance-sheet-statement/" + companyName + "?limit=120&apikey=" + apiKey);
         URL incomeURL = new URL("https://financialmodelingprep.com/api/v3/income-statement/" + companyName + "?limit=120&apikey=" + apiKey);
         URL cfURL = new URL("https://financialmodelingprep.com/api/v3/cash-flow-statement/" + companyName + "?limit=120&apikey=" + apiKey);
-
-//        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(url.openStream()));
-//        File file = new File("test.json");
 
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode objYear = objectMapper.readTree(url);
